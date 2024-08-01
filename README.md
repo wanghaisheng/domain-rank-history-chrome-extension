@@ -10,6 +10,8 @@ rank changes report
 
 https://tranco-list.eu/methodology
 
+# one domain
+
 ## last 30 days
 
 https://tranco-list.eu/query
@@ -19,6 +21,11 @@ https://tranco-list.eu/query
 https://github.com/zakird/crux-top-lists/tree/main/data/global
 
 
+## multiple domain
+
+### competitors track
+
+wow  they are doing good
 
 
 
