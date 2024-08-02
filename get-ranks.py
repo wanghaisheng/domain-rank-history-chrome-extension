@@ -85,30 +85,6 @@ outfilepath='top-domains-1m-in.csv'
 outfile = Recorder(folder_path+'/'+outfilepath, cache_size=200)
 outfileerror = Recorder(folder_path+'/'+outfilepath.replace('.csv','-error.csv'), cache_size=10)
 
-def get_title_from_html(html):
-    title = "not content!"
-    try:
-        title_patten = r"<title>(\s*?.*?\s*?)</title>"
-        result = re.findall(title_patten, html)
-        if len(result) >= 1:
-            title = result[0]
-            title = title.strip()
-    except:
-        logger.error("cannot find title")
-    return title
-
-
-async def fetch_rdap_servers():
-    """Fetches RDAP servers from IANA's RDAP Bootstrap file."""
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get("https://data.iana.org/rdap/dns.json") as response:
-            data = await response.json()
-            for entry in data["services"]:
-                tlds = entry[0]
-                rdap_url = entry[1][0]
-                for tld in tlds:
-                    RDAP_SERVERS[tld] = rdap_url
 
 
 async def get_proxy():
@@ -131,36 +107,13 @@ async def get_proxy_proxypool():
         except:
             return None
 
-def get_des_from_html(html):
-    description = 'not content!'
-    try:
-
-        # Parse the HTML content
-        soup = BeautifulSoup(html, 'html.parser')
-
-
-        # Extract the meta description
-        description_tag = soup.find('meta', attrs={'name': 'description'})
-        description = description_tag['content'] if description_tag else 'No description found'
-        description=description.strip()
-        logger.ino(f'find description:{description}')
-
-    except:
-        logger.error('cannot find description')
-    return description
 
 def get_tld(domain: str):
     """Extracts the top-level domain from a domain name."""
     parts = domain.split(".")
     return ".".join(parts[1:]) if len(parts) > 1 else parts[0]
 
-# Function to extract data from HTTP response
-async def extract_data(response):
-    try:
-        data = await response.json()
-        return data
-    except aiohttp.ContentTypeError:
-        return None
+
 
 def save_data_to_csv(data, csv_filename):
   # Load JSON data
@@ -181,7 +134,7 @@ def save_data_to_csv(data, csv_filename):
           writer.writerow([entry['date'], entry['rank']])
 
   print(f"Saved data to CSV: {csv_filename}")
-def save_data_to_mongodb_and_csv(data):
+def save_data_to_mongodb(data):
     # Extract domain and ranks
     domain = data['domain']
     ranks = data['ranks']
@@ -243,16 +196,6 @@ async def extract_rank(response,domain):
             # bornat=None)
             # db_manager.add_domain(new_domain)
         return False
-def savedb(outfile,domain,domaindata):
-
-    # Domain=
-    new_domain = Domain(
-        url=domain,tld=get_tld(domain),
-    title=None,
-    indexat=r[-1] or None,
-    des=None,
-    bornat=None)
-    add_domain(new_domain)
 
 
 # Function to simulate a task asynchronously
@@ -377,7 +320,7 @@ async def run_async_tasks():
         # print(domain)
         if  domain not in donedomains:
             print('add domain',domain)
-            task = asyncio.create_task(get_index_date(domain))
+            task = asyncio.create_task(get_rank(domain))
             tasks.append(task)
             if len(tasks) >= 100:
                 # Wait for the current batch of tasks to complete
